@@ -37,7 +37,10 @@ export function observeApis(_targetApiNames: string) {
     }
 
     const tmp = name.split(".")
-    const obj = getRef(tmp.slice(0, tmp.length - 1).join("."))
+    const obj =
+      tmp.length === 1
+        ? globalThis
+        : getRef(tmp.slice(0, tmp.length - 1).join("."))
     obj[tmp[tmp.length - 1]] = new Proxy(original, handler)
   }
 
