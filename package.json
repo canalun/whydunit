@@ -28,6 +28,16 @@
       "scripting",
       "webNavigation"
     ],
+    "web_accessible_resources": [
+      {
+        "resources": [
+          "~override.js"
+        ],
+        "matches": [
+          "*://*/*"
+        ]
+      }
+    ],
     "host_permissions": [
       "https://*/*"
     ]
