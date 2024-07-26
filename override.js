@@ -1,49 +1,85 @@
-overrideDocumentWrite()
+const targetApiNames = [
+  "globalThis.fetch",
+  "globalThis.console.log",
+  "globalThis.document.write"
+]
 
-function overrideDocumentWrite() {
-  var originalWrite = document.write
+/////////////////////////////////////////////////////////////
 
-  document.write = function () {
-    // オリジナルの関数を呼び出す
-    var result = originalWrite.apply(this, arguments)
+console.log("start observing...")
 
-    // スタックトレースを取得
-    var stack = new Error().stack
+var originalLog = window.console.log
+var originalError = window.Error
+var originalFetch = window.fetch
+var originalApply = window.Reflect.apply
+var originalJSONStringify = window.JSON.stringify
 
-    // スタックトレースを解析
-    var stackLines = stack.split("\n").slice(1) // 最初の行（Error オブジェクト自体）を除外
-    var callerInfo = parseStackTrace(stackLines)
+observeAllApis()
 
-    // 呼び出し情報をログに記録
-    console.warn("document.write was called")
-    console.log("Arguments:", Array.from(arguments))
-    console.log("Caller:", callerInfo)
-    console.log("Full stack:", stack)
+function observeAllApis() {
+  for (const name of targetApiNames) {
+    observeApi(name)
+  }
+}
 
-    // CORSがあってもPOSTはできるはず
-    fetch("https://httpbin.org/post", {
-      method: "POST",
-      body: JSON.stringify({
-        title: "Hello World",
-        body: "My POST request"
-      }),
-      headers: {
-        "Content-type": "application/json; charset=UTF-8"
-      }
-    })
-      .then((response) => response.json())
-      .then((json) => console.log(json))
-
-    return result
+function observeApi(name) {
+  const original = getRef(name)
+  if (!original) {
+    console.log(`${name} cannot be observed.`)
+    return
   }
 
-  function parseStackTrace(stackLines) {
-    // document.write の呼び出し元を探す（最初のdocument.writeではない行）
-    for (var i = 0; i < stackLines.length; i++) {
-      if (stackLines[i].indexOf("at Document.write") === -1) {
-        return stackLines[i].trim()
-      }
+  const handler = {
+    apply(target, thisArg, argumentsList) {
+      originalLog("Arguments:", Array.from(argumentsList))
+      const stack = originalError().stack
+      originalLog("Stack:", stack)
+
+      postToDashboard(name, stack, argumentsList)
+
+      return originalApply(target, thisArg, argumentsList)
     }
-    return "Unknown caller"
   }
+
+  const tmp = name.split(".")
+  const obj = getRef(tmp.slice(0, tmp.length - 1).join("."))
+  obj[tmp[tmp.length - 1]] = new Proxy(original, handler)
+}
+
+function getRef(name) {
+  let target = null
+
+  const path = name.split(".")
+  for (let i = 0; i < path.length; i++) {
+    try {
+      // Some APIs such as `callee` throw when it's accessed.
+      target = i === 0 ? window[path[i]] : target[path[i]]
+    } catch {
+      target = null
+      break
+    }
+  }
+
+  return target
+}
+
+function postToDashboard(name, stack, argsList) {
+  let args = ""
+  try {
+    args = originalJSONStringify(argsList)
+  } catch {
+    args = "*** CANNOT BE STRINGIFIED ***"
+  }
+  // CORSがあってもPOSTはできるはず
+  originalFetch("https://httpbin.org/post", {
+    method: "POST",
+    body: {
+      name: name,
+      stack: stack,
+      args: args
+    },
+    headers: {
+      "Content-type": "application/json; charset=UTF-8"
+    }
+  })
 }
