@@ -1,9 +1,9 @@
 export function observeApis(_targetApiNames: string) {
   const originalLog = window.console.log
   const originalError = window.Error
-  const originalFetch: typeof globalThis.fetch = window.fetch
+  // const originalFetch: typeof globalThis.fetch = window.fetch
   const originalApply = window.Reflect.apply
-  const originalJSONStringify = window.JSON.stringify
+  // const originalJSONStringify = window.JSON.stringify
 
   /////////////////////////////////////////////////////////////
 
@@ -30,7 +30,7 @@ export function observeApis(_targetApiNames: string) {
         const stack = originalError().stack
         originalLog("Stack:", stack)
 
-        postToDashboard(name, stack, argumentsList)
+        // postToDashboard(name, stack, argumentsList)
 
         return originalApply(target, thisArg, argumentsList)
       }
@@ -61,24 +61,23 @@ export function observeApis(_targetApiNames: string) {
     return target
   }
 
-  function postToDashboard(name, stack, argsList) {
-    let args = ""
-    try {
-      args = originalJSONStringify(argsList)
-    } catch {
-      args = "*** CANNOT BE STRINGIFIED ***"
-    }
-    // CORSがあってもPOSTはできるはず
-    originalFetch("https://httpbin.org/post", {
-      method: "POST",
-      body: originalJSONStringify({
-        name: name,
-        stack: stack,
-        args: args
-      }),
-      headers: {
-        "Content-type": "application/json; charset=UTF-8"
-      }
-    })
-  }
+  // function postToDashboard(name, stack, argsList) {
+  //   let args = ""
+  //   try {
+  //     args = originalJSONStringify(argsList)
+  //   } catch {
+  //     args = "*** CANNOT BE STRINGIFIED ***"
+  //   }
+  //   originalFetch("http://localhost:3000/aa", {
+  //     method: "POST",
+  //     body: originalJSONStringify({
+  //       name: name,
+  //       stack: stack,
+  //       args: args
+  //     }),
+  //     headers: {
+  //       "Content-type": "application/json; charset=UTF-8"
+  //     }
+  //   })
+  // }
 }
