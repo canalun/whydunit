@@ -1,9 +1,5 @@
 export {}
 
-console.log(
-  "Live now; make now always the most precious time. Now will never come again."
-)
-
 chrome.webNavigation.onDOMContentLoaded.addListener((details) => {
   chrome.scripting.executeScript({
     target: {
