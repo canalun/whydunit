@@ -71,7 +71,7 @@ export function observeApis(_targetApiNames: string) {
       !Object.hasOwn(originalPrototype, propKey)
     ) {
       // @ts-expect-error
-      originalPrototype = boundThis.__proto__
+      originalPrototype = originalPrototype.__proto__
     }
     if (Object.hasOwn(originalPrototype, propKey)) {
       return originalPrototype
