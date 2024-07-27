@@ -25,7 +25,7 @@ function DeltaFlyerPage() {
           return (
             <tr>
               <td key={i}>
-                {name}, {stack.split("\n").slice(2)}, {args}`
+                {name}, {stack.split("\n").slice(2)}, {args}
               </td>
             </tr>
           )
