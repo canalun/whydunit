@@ -27,8 +27,8 @@ export function observeApis(_targetApiNames: string) {
       return
     }
 
-    const propName = name.split(".").at(-1)
-    const originalPrototype = getOriginalPrototype(boundThis, propName)
+    const propKey = name.split(".").at(-1)
+    const originalPrototype = getOriginalPrototype(boundThis, propKey)
     // Use `=== null`, because `originalPrototype` is strangely falsy in some cases such as `document.all`.
     if (!originalPrototype) {
       console.error(
@@ -37,32 +37,11 @@ export function observeApis(_targetApiNames: string) {
       return
     }
 
-    const desc = Object.getOwnPropertyDescriptor(originalPrototype, propName)
-    // Property descriptors are of two kinds.
-    // https://262.ecma-international.org/15.0/index.html?_gl=1*1n9j7ka*_ga*ODUwMDQyMzQ2LjE3MjIwOTkzOTg.*_ga_TDCK4DWEPP*MTcyMjA5OTM5OC4xLjAuMTcyMjA5OTM5OC4wLjAuMA..#table-object-property-attributes
-    if ("value" in desc) {
-      // data property case
-      Object.defineProperty(originalPrototype, propName, {
-        ...desc,
-        value: new Proxy(desc.value, createProxyHandler(name))
-      })
-    } else if ("get" in desc) {
-      // accessor property case
-      Object.defineProperty(originalPrototype, propName, {
-        ...desc,
-        get: desc.get
-          ? new Proxy(desc.get, createProxyHandler(name))
-          : undefined,
-        set: desc.set
-          ? new Proxy(desc.set, createProxyHandler(name))
-          : undefined
-      })
-    } else {
-      console.error(
-        `${name} cannot be observed, because the format of property descriptor is not as expected. The descriptor:`,
-        desc
-      )
-    }
+    // TODO: is this right?
+    const isBoundThisLogEnabled = name.split(".").at(-2) === "prototype"
+    override(originalPrototype, propKey, name, isBoundThisLogEnabled)
+
+    return
   }
 
   function getBoundThis(name: string) {
@@ -84,50 +63,109 @@ export function observeApis(_targetApiNames: string) {
     return { boundThis, error }
   }
 
-  function getOriginalPrototype(boundThis: object, propName: string) {
+  function getOriginalPrototype(boundThis: object, propKey: string) {
     let originalPrototype = boundThis
     while (
       // `!originalPrototype` doesn't work, because `originalPrototype` is strangely falsy in some cases such as `document.all`.
       originalPrototype instanceof Object &&
-      !Object.hasOwn(originalPrototype, propName)
+      !Object.hasOwn(originalPrototype, propKey)
     ) {
       // @ts-expect-error
       originalPrototype = boundThis.__proto__
     }
-    if (Object.hasOwn(originalPrototype, propName)) {
+    if (Object.hasOwn(originalPrototype, propKey)) {
       return originalPrototype
     } else {
       return null
     }
   }
 
-  function createProxyHandler(name: string) {
+  function override(
+    originalPrototype: object,
+    propKey: string,
+    name: string,
+    isBoundThisLogEnabled: boolean
+  ) {
+    const desc = Object.getOwnPropertyDescriptor(originalPrototype, propKey)
+    // Property descriptors are of two kinds.
+    // https://262.ecma-international.org/15.0/index.html?_gl=1*1n9j7ka*_ga*ODUwMDQyMzQ2LjE3MjIwOTkzOTg.*_ga_TDCK4DWEPP*MTcyMjA5OTM5OC4xLjAuMTcyMjA5OTM5OC4wLjAuMA..#table-object-property-attributes
+    if ("value" in desc) {
+      // data property case
+      Object.defineProperty(originalPrototype, propKey, {
+        ...desc,
+        value: new Proxy(
+          desc.value,
+          createProxyHandler(name, isBoundThisLogEnabled)
+        )
+      })
+    } else if ("get" in desc) {
+      // accessor property case
+      Object.defineProperty(originalPrototype, propKey, {
+        ...desc,
+        get: desc.get
+          ? new Proxy(desc.get, createProxyHandler(name, isBoundThisLogEnabled))
+          : undefined,
+        set: desc.set
+          ? new Proxy(desc.set, createProxyHandler(name, isBoundThisLogEnabled))
+          : undefined
+      })
+    } else {
+      console.error(
+        `${name} cannot be observed, because the format of property descriptor is not as expected. The descriptor:`,
+        desc
+      )
+    }
+  }
+
+  function createProxyHandler(name: string, isBoundThisLogEnabled: boolean) {
     return {
       apply(target, thisArg, argumentsList) {
         originalLog("Arguments:", Array.from(argumentsList))
+
         const stack = originalError().stack
         originalLog("Stack:", stack)
 
-        postToDashboard(name, stack, argumentsList)
+        isBoundThisLogEnabled && originalLog("BoundThis:", thisArg)
+
+        postToDashboard(
+          name,
+          stack,
+          argumentsList,
+          isBoundThisLogEnabled ? thisArg : undefined
+        )
 
         return originalApply(target, thisArg, argumentsList)
       }
     }
   }
 
-  function postToDashboard(name: string, stack: string, argsList: unknown[]) {
+  function postToDashboard(
+    name: string,
+    stack: string,
+    argsList: unknown[],
+    _boundThis?: unknown
+  ) {
     let args: string = ""
     try {
       args = originalJSONStringify(argsList)
     } catch {
       args = "*** CANNOT BE STRINGIFIED ***"
     }
+
+    let boundThis: undefined | string = undefined
+    try {
+      boundThis = !!_boundThis ? originalJSONStringify(_boundThis) : undefined
+    } catch {
+      boundThis = "*** CANNOT BE STRINGIFIED ***"
+    }
+
     originalPostMessage({
       id: "whydunit" satisfies typeof MESSAGE_ID, // use literal because import statement cannot be used in this file
       type: "detected" satisfies typeof TYPE_DETECTED, // use literal because import statement cannot be used in this file
       name,
       stack,
-      args
+      args,
+      boundThis
     } satisfies DetectedMessageData)
   }
 }

@@ -7,7 +7,7 @@ function DeltaFlyerPage() {
   useEffect(() => {
     chrome.storage.onChanged.addListener(
       ({
-        detected: { newValue, oldValue }
+        detected: { newValue }
       }: {
         detected: {
           newValue: DetectedMessageData[]
@@ -21,11 +21,11 @@ function DeltaFlyerPage() {
   return (
     <table>
       <tbody>
-        {data.map(({ name, stack, args }, i) => {
+        {data.map(({ name, stack, args, boundThis }, i) => {
           return (
             <tr>
               <td key={i}>
-                {name}, {stack.split("\n").slice(2)}, {args}
+                {name}, {stack.split("\n").slice(2)}, {args}, {boundThis ?? ""}
               </td>
             </tr>
           )

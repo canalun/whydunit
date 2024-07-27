@@ -9,6 +9,7 @@ export type DetectedMessageData = {
   name: string
   stack: string
   args: string
+  boundThis?: string
 }
 
 export type StartedMessageData = {
