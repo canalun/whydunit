@@ -26,17 +26,8 @@
   "manifest": {
     "permissions": [
       "scripting",
-      "webNavigation"
-    ],
-    "web_accessible_resources": [
-      {
-        "resources": [
-          "~override.js"
-        ],
-        "matches": [
-          "*://*/*"
-        ]
-      }
+      "webNavigation",
+      "storage"
     ],
     "host_permissions": [
       "https://*/*"
