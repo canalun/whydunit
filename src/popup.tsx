@@ -1,5 +1,6 @@
 import { useState } from "react"
 
+import { chromiumApis } from "~chromiumApis"
 import {
   extId,
   MESSAGE_ID,
@@ -13,9 +14,24 @@ function IndexPopup() {
   return (
     <div
       style={{
-        padding: 16
+        padding: 16,
+        minWidth: 480,
+        minHeight: 480
       }}>
-      <input onChange={(e) => setTarget(e.target.value)} value={target} />
+      <input
+        list="apis"
+        onChange={(e) => setTarget(e.target.value)}
+        value={target}
+      />
+      <datalist id="apis">
+        {chromiumApis.map((api) => (
+          <option value={api} />
+        ))}
+        {/* --- edge cases --- */}
+        <option value="document.all" />
+        <option value="document.all.length" />
+        {/* --- edge cases --- */}
+      </datalist>
       <button
         onClick={() => {
           chrome.runtime.sendMessage({
