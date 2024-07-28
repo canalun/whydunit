@@ -1,7 +1,7 @@
 import { useState } from "react"
 
 import {
-  extId,
+  EXT_ID,
   MESSAGE_ID,
   TYPE_SWITCHED_OBSERVATION,
   type ObservationSwitchedMessageData
@@ -38,13 +38,13 @@ function IndexPopup() {
       <a
         target="_blank"
         rel="noreferrer"
-        href={`chrome-extension://${extId}/tabs/result.html`}>
+        href={`chrome-extension://${EXT_ID}/tabs/result.html`}>
         open result page
       </a>
       <a
         target="_blank"
         rel="noreferrer"
-        href={`chrome-extension://${extId}/tabs/configuration.html`}>
+        href={`chrome-extension://${EXT_ID}/tabs/configuration.html`}>
         open configuration page
       </a>
     </div>
