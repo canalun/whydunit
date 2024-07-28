@@ -46,7 +46,7 @@ function IndexPopup() {
       <a
         target="_blank"
         rel="noreferrer"
-        href={`chrome-extension://${extId}/tabs/detected.html`}>
+        href={`chrome-extension://${extId}/tabs/result.html`}>
         open page
       </a>
     </div>

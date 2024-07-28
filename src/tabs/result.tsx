@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 
 import type { DetectedMessageData } from "~common"
 
-function DeltaFlyerPage() {
+function ResultPage() {
   const [data, setData] = useState<DetectedMessageData[]>([])
   useEffect(() => {
     chrome.storage.onChanged.addListener(
@@ -35,4 +35,4 @@ function DeltaFlyerPage() {
   )
 }
 
-export default DeltaFlyerPage
+export default ResultPage
