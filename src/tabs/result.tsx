@@ -15,7 +15,6 @@ function ResultPage() {
         }
       }) => {
         setData(newValue)
-        console.log(newValue[0].stack)
       }
     )
   }, [setData])

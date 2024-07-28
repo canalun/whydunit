@@ -27,7 +27,6 @@ function prepareForInjection() {
             "configurations",
             ({ configurations: _configuration }) => {
               const configurations = JSON.parse(_configuration)
-              console.log(configurations)
               execute = createExecuteCallback(configurations)
               chrome.webNavigation.onDOMContentLoaded.addListener(execute)
             }
@@ -44,7 +43,6 @@ function createExecuteCallback(configs: Configurations) {
     const targets: string[] = []
 
     for (const config of configs) {
-      console.log(config)
       if (config.url === ALL_URL || pageUrl.includes(config.url)) {
         targets.push(...config.targets)
       }
