@@ -7,6 +7,11 @@ export function observeApis(targetApiNames: string[]) {
   const originalJSONStringify = window.JSON.stringify
   const originalPostMessage = window.postMessage
 
+  const originalLocationHref = Object.getOwnPropertyDescriptor(
+    window.location,
+    "href"
+  ).get.bind(window.location)
+
   /////////////////////////////////////////////////////////////
 
   observeAllApis()
@@ -159,6 +164,7 @@ export function observeApis(targetApiNames: string[]) {
     }
 
     originalPostMessage({
+      url: originalLocationHref(),
       id: "whydunit" satisfies typeof MESSAGE_ID, // use literal because import statement cannot be used in this file
       type: "detected" satisfies typeof TYPE_DETECTED, // use literal because import statement cannot be used in this file
       name,

@@ -27,17 +27,21 @@ function ResultPage() {
       <table>
         <thead>
           <tr>
+            <th scope="col">url</th>
             <th scope="col">API</th>
-            <th scope="col">Stack</th>
             <th scope="col">Args</th>
             <th scope="col">BoundThis</th>
+            <th scope="col">Stack</th>
           </tr>
         </thead>
         <tbody>
-          {data?.map(({ name, stack, args, boundThis }, i) => {
+          {data?.map(({ url, name, stack, args, boundThis }, i) => {
             return (
               <tr key={i}>
+                <td key={i}>{url}</td>
                 <td key={i}>{name}</td>
+                <td style={tableCellStyle(500)}>{args}</td>
+                <td>{boundThis ?? ""}</td>
                 <td style={tableCellStyle(500)}>
                   {...stack
                     .split("\n")
@@ -51,8 +55,6 @@ function ResultPage() {
                       )
                     })}
                 </td>
-                <td style={tableCellStyle(500)}>{args}</td>
-                <td>{boundThis ?? ""}</td>
               </tr>
             )
           })}
