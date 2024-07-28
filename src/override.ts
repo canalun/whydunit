@@ -1,6 +1,6 @@
 import { MESSAGE_ID, TYPE_DETECTED, type DetectedMessageData } from "~common"
 
-export function observeApis(_targetApiNames: string) {
+export function observeApis(targetApiNames: string[]) {
   const originalLog = window.console.log
   const originalError = window.Error
   const originalApply = window.Reflect.apply
@@ -12,7 +12,6 @@ export function observeApis(_targetApiNames: string) {
   observeAllApis()
 
   function observeAllApis() {
-    const targetApiNames = _targetApiNames.split(",").map((name) => name.trim())
     console.log(`start observing...\n${targetApiNames.join("\n")}`)
     for (const name of targetApiNames) {
       observeApi(name)

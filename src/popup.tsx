@@ -1,53 +1,51 @@
 import { useState } from "react"
 
-import { chromiumApis } from "~chromiumApis"
 import {
   extId,
   MESSAGE_ID,
-  TYPE_STARTED_OBSERVATION,
-  type StartedMessageData
+  TYPE_SWITCHED_OBSERVATION,
+  type ObservationSwitchedMessageData
 } from "~common"
 
 function IndexPopup() {
-  const [target, setTarget] = useState("")
+  const [observationEnabled, setObservationEnabled] = useState<boolean>(false)
 
   return (
     <div
       style={{
-        padding: 16,
-        minWidth: 480,
-        minHeight: 480
+        padding: 16
       }}>
-      <input
-        list="apis"
-        onChange={(e) => setTarget(e.target.value)}
-        value={target}
-      />
-      <datalist id="apis">
-        {chromiumApis.map((api) => (
-          <option value={api} />
-        ))}
-        {/* --- edge cases --- */}
-        <option value="document.all" />
-        <option value="document.all.length" />
-        {/* --- edge cases --- */}
-      </datalist>
+      <p>WARNING: Please reload the page when you start observation.</p>
       <button
         onClick={() => {
           chrome.runtime.sendMessage({
-            target: target,
-            type: TYPE_STARTED_OBSERVATION,
-            id: MESSAGE_ID
-          } satisfies StartedMessageData)
+            type: TYPE_SWITCHED_OBSERVATION,
+            id: MESSAGE_ID,
+            observationEnabled: !observationEnabled
+          } satisfies ObservationSwitchedMessageData)
+          setObservationEnabled((v) => !v)
+        }}
+        style={{
+          backgroundColor: observationEnabled ? "blue" : "white",
+          color: observationEnabled ? "white" : "blue",
+          fontWeight: observationEnabled ? "bold" : "initial"
         }}>
-        observe
+        {observationEnabled
+          ? "observation is now ON"
+          : "observation is now OFF"}
       </button>
       <br />
       <a
         target="_blank"
         rel="noreferrer"
         href={`chrome-extension://${extId}/tabs/result.html`}>
-        open page
+        open result page
+      </a>
+      <a
+        target="_blank"
+        rel="noreferrer"
+        href={`chrome-extension://${extId}/tabs/configuration.html`}>
+        open configuration page
       </a>
     </div>
   )

@@ -1,6 +1,6 @@
 export const MESSAGE_ID = "whydunit"
 
-export const TYPE_STARTED_OBSERVATION = "started"
+export const TYPE_SWITCHED_OBSERVATION = "switched"
 export const TYPE_DETECTED = "detected"
 
 export type DetectedMessageData = {
@@ -12,10 +12,17 @@ export type DetectedMessageData = {
   boundThis?: string
 }
 
-export type StartedMessageData = {
+export type ObservationSwitchedMessageData = {
   id: typeof MESSAGE_ID
-  type: typeof TYPE_STARTED_OBSERVATION
-  target: string
+  type: typeof TYPE_SWITCHED_OBSERVATION
+  observationEnabled: boolean
 }
 
 export const extId = "fdbpfhlakkfkmajmbkhjiacchkcjhhig"
+
+export type Configurations = {
+  url: string
+  targets: string[]
+}[]
+
+export const ALL_URL = "<all_url>"

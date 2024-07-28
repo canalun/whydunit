@@ -1,8 +1,10 @@
 import {
+  ALL_URL,
   TYPE_DETECTED,
-  TYPE_STARTED_OBSERVATION,
+  TYPE_SWITCHED_OBSERVATION,
+  type Configurations,
   type DetectedMessageData,
-  type StartedMessageData
+  type ObservationSwitchedMessageData
 } from "~common"
 import { observeApis } from "~override"
 
@@ -13,24 +15,41 @@ initializeRecorder()
 
 function prepareForInjection() {
   let execute = null
-  chrome.runtime.onMessage.addListener((message: StartedMessageData) => {
-    if (message.type === TYPE_STARTED_OBSERVATION) {
-      if (execute) {
-        chrome.webNavigation.onDOMContentLoaded.removeListener(execute)
+  chrome.runtime.onMessage.addListener(
+    (message: ObservationSwitchedMessageData) => {
+      if (message.type === TYPE_SWITCHED_OBSERVATION) {
+        if (execute) {
+          chrome.webNavigation.onDOMContentLoaded.removeListener(execute)
+        }
+
+        if (message.observationEnabled) {
+          chrome.storage.local.get(
+            "configurations",
+            ({ configurations: _configuration }) => {
+              const configurations = JSON.parse(_configuration)
+              console.log(configurations)
+              execute = createExecuteCallback(configurations)
+              chrome.webNavigation.onDOMContentLoaded.addListener(execute)
+            }
+          )
+        }
       }
-
-      execute = createExecuteCallback(message.target)
-      chrome.webNavigation.onDOMContentLoaded.addListener(execute)
-
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        chrome.tabs.update(tabs[0].id, { url: tabs[0].url })
-      })
     }
-  })
+  )
 }
 
-function createExecuteCallback(targets: string) {
+function createExecuteCallback(configs: Configurations) {
   return (details: chrome.webNavigation.WebNavigationFramedCallbackDetails) => {
+    const pageUrl = details.url
+    const targets: string[] = []
+
+    for (const config of configs) {
+      console.log(config)
+      if (config.url === ALL_URL || pageUrl.includes(config.url)) {
+        targets.push(...config.targets)
+      }
+    }
+
     chrome.scripting.executeScript({
       target: {
         frameIds: [details.frameId],
