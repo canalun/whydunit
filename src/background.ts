@@ -5,7 +5,8 @@ import {
   TYPE_SWITCHED_OBSERVATION,
   type Configurations,
   type DetectedMessageData,
-  type ObservationSwitchedMessageData
+  type ObservationSwitchedMessageData,
+  type Target
 } from "~common"
 import { observeApis } from "~override"
 
@@ -29,11 +30,14 @@ function prepareForInjection() {
         }
 
         if (message.observationEnabled) {
-          chrome.storage.local.get("configurations", ({ configurations }) => {
-            execute = createExecuteCallback(configurations)
-            console.log("observation is ready, now waiting for reload...")
-            chrome.webNavigation.onDOMContentLoaded.addListener(execute)
-          })
+          chrome.storage.local.get(
+            "configurations",
+            ({ configurations }: { configurations: Configurations }) => {
+              execute = createExecuteCallback(configurations)
+              console.log("observation is ready, now waiting for reload...")
+              chrome.webNavigation.onDOMContentLoaded.addListener(execute)
+            }
+          )
         }
       }
     }
@@ -43,7 +47,7 @@ function prepareForInjection() {
 function createExecuteCallback(configs: Configurations) {
   return (details: chrome.webNavigation.WebNavigationFramedCallbackDetails) => {
     const pageUrl = details.url
-    const targets: string[] = []
+    const targets: Target[] = []
 
     for (const config of configs) {
       if (config.url === ALL_URL || pageUrl.includes(config.url)) {

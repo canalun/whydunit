@@ -9,7 +9,7 @@ export type DetectedMessageData = {
   type: typeof TYPE_DETECTED
   name: string
   stack: string
-  args: string
+  args: string[]
   boundThis?: string
 }
 
@@ -23,7 +23,7 @@ export const EXT_ID = "fdbpfhlakkfkmajmbkhjiacchkcjhhig"
 
 export type Configurations = {
   url: string
-  targets: string[]
+  targets: Target[]
 }[]
 
 export const ALL_URL = "<all_url>"
@@ -32,14 +32,35 @@ export const defaultConfigurations: Configurations = [
   {
     url: ALL_URL,
     targets: [
-      "Element.prototype.children",
-      "console.log",
-      "fetch",
-      "document.all.length"
+      { apiName: "Element.prototype.children" },
+      {
+        apiName: "console.log",
+        debugInfo: {
+          args: ["test"]
+        }
+      },
+      { apiName: "fetch" },
+      { apiName: "document.all.length" }
     ]
   },
   {
     url: "https://en.wikipedia.org",
-    targets: ["String.prototype.split"]
+    targets: [{ apiName: "String.prototype.split" }]
   }
 ]
+
+export type Target = {
+  apiName: string
+  debugInfo?: DebugInfo
+}
+type DebugInfo =
+  | {
+      args: string[]
+      bindThis: unknown
+    }
+  | {
+      bindThis: unknown
+    }
+  | {
+      args: string[]
+    }

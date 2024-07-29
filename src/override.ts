@@ -1,6 +1,11 @@
-import { MESSAGE_ID, TYPE_DETECTED, type DetectedMessageData } from "~common"
+import {
+  MESSAGE_ID,
+  TYPE_DETECTED,
+  type DetectedMessageData,
+  type Target
+} from "~common"
 
-export function observeApis(targetApiNames: string[]) {
+export function observeApis(targets: Target[]) {
   const originalLog = window.console.log
   const originalError = window.Error
   const originalApply = window.Reflect.apply
@@ -17,13 +22,16 @@ export function observeApis(targetApiNames: string[]) {
   observeAllApis()
 
   function observeAllApis() {
-    console.log(`start observing...\n${targetApiNames.join("\n")}`)
-    for (const name of targetApiNames) {
+    console.log(
+      `start observing...\n${targets.map((t) => t.apiName).join("\n")}`
+    )
+    for (const name of targets) {
       observeApi(name)
     }
   }
 
-  function observeApi(name: string) {
+  function observeApi(target: Target) {
+    const name = target.apiName
     const { boundThis, error } = getBoundThis(name)
     // Use `=== null`, because `boundThis` is strangely falsy in some cases such as `document.all`.
     if (boundThis === null) {
@@ -41,9 +49,9 @@ export function observeApis(targetApiNames: string[]) {
       return
     }
 
-    // TODO: is this right?
-    const isBoundThisLogEnabled = name.split(".").at(-2) === "prototype"
-    override(originalPrototype, propKey, name, isBoundThisLogEnabled)
+    const isBoundThisLogEnabled = name.split(".").at(-2) === "prototype" // TODO: is this right?
+    const handler = createProxyHandler(target, isBoundThisLogEnabled)
+    override(originalPrototype, propKey, handler)
 
     return
   }
@@ -84,12 +92,7 @@ export function observeApis(targetApiNames: string[]) {
     }
   }
 
-  function override(
-    originalPrototype: object,
-    propKey: string,
-    name: string,
-    isBoundThisLogEnabled: boolean
-  ) {
+  function override(originalPrototype: object, propKey: string, handler: any) {
     const desc = Object.getOwnPropertyDescriptor(originalPrototype, propKey)
     // Property descriptors are of two kinds.
     // https://262.ecma-international.org/15.0/index.html?_gl=1*1n9j7ka*_ga*ODUwMDQyMzQ2LjE3MjIwOTkzOTg.*_ga_TDCK4DWEPP*MTcyMjA5OTM5OC4xLjAuMTcyMjA5OTM5OC4wLjAuMA..#table-object-property-attributes
@@ -97,21 +100,14 @@ export function observeApis(targetApiNames: string[]) {
       // data property case
       Object.defineProperty(originalPrototype, propKey, {
         ...desc,
-        value: new Proxy(
-          desc.value,
-          createProxyHandler(name, isBoundThisLogEnabled)
-        )
+        value: new Proxy(desc.value, handler)
       })
     } else if ("get" in desc) {
       // accessor property case
       Object.defineProperty(originalPrototype, propKey, {
         ...desc,
-        get: desc.get
-          ? new Proxy(desc.get, createProxyHandler(name, isBoundThisLogEnabled))
-          : undefined,
-        set: desc.set
-          ? new Proxy(desc.set, createProxyHandler(name, isBoundThisLogEnabled))
-          : undefined
+        get: desc.get ? new Proxy(desc.get, handler) : undefined,
+        set: desc.set ? new Proxy(desc.set, handler) : undefined
       })
     } else {
       console.error(
@@ -121,7 +117,8 @@ export function observeApis(targetApiNames: string[]) {
     }
   }
 
-  function createProxyHandler(name: string, isBoundThisLogEnabled: boolean) {
+  function createProxyHandler(target: Target, isBoundThisLogEnabled: boolean) {
+    const { apiName: name, debugInfo } = target
     return {
       apply(target, thisArg, argumentsList) {
         originalLog("Arguments:", Array.from(argumentsList))
@@ -138,6 +135,17 @@ export function observeApis(targetApiNames: string[]) {
           isBoundThisLogEnabled ? thisArg : undefined
         )
 
+        if (!!debugInfo) {
+          if (
+            ("args" in debugInfo &&
+              stringifiedEqual(debugInfo.args, argumentsList)) ||
+            ("bindThis" in debugInfo &&
+              stringifiedEqual(debugInfo.bindThis, thisArg))
+          ) {
+            debugger
+          }
+        }
+
         return originalApply(target, thisArg, argumentsList)
       }
     }
@@ -149,11 +157,17 @@ export function observeApis(targetApiNames: string[]) {
     argsList: unknown[],
     _boundThis?: unknown
   ) {
-    let args: string = ""
-    try {
-      args = originalJSONStringify(argsList)
-    } catch {
-      args = "*** CANNOT BE STRINGIFIED ***"
+    let args: string[] = []
+    for (const _arg of argsList) {
+      let arg = ""
+      try {
+        // TODO: is this right?
+        arg =
+          _arg instanceof Object ? originalJSONStringify(_arg) : _arg.toString()
+      } catch {
+        arg = "*** CANNOT BE STRINGIFIED ***"
+      }
+      args.push(arg)
     }
 
     let boundThis: undefined | string = undefined
@@ -172,5 +186,14 @@ export function observeApis(targetApiNames: string[]) {
       args,
       boundThis
     } satisfies DetectedMessageData)
+  }
+
+  function stringifiedEqual(a: unknown, b: unknown) {
+    let result = false
+    try {
+      result = JSON.stringify(a) === JSON.stringify(b)
+    } finally {
+      return result
+    }
   }
 }
