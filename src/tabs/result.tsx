@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react"
 
-import type { DetectedMessageData } from "~common"
+import {
+  chromeStorageKeyForDetections,
+  type DetectedMessageData
+} from "~common"
 
 function ResultPage() {
   const [data, setData] = useState<DetectedMessageData[]>([])
   useEffect(() => {
     chrome.storage.onChanged.addListener(
       ({
-        detected: { newValue }
+        [chromeStorageKeyForDetections]: { newValue }
       }: {
-        detected: {
+        [chromeStorageKeyForDetections]: {
           newValue: DetectedMessageData[]
           oldValue: DetectedMessageData[]
         }
@@ -20,7 +23,10 @@ function ResultPage() {
   }, [setData])
   return (
     <>
-      <button onClick={() => chrome.storage.local.remove("detected")}>
+      <button
+        onClick={() =>
+          chrome.storage.local.remove(chromeStorageKeyForDetections)
+        }>
         reset the result
       </button>
       <table>

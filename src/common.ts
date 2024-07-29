@@ -64,3 +64,6 @@ type DebugInfo =
   | {
       args: string[]
     }
+
+export const chromeStorageKeyForConfigurations = "configurations"
+export const chromeStorageKeyForDetections = "detections"

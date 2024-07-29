@@ -1,5 +1,7 @@
 import {
   ALL_URL,
+  chromeStorageKeyForConfigurations,
+  chromeStorageKeyForDetections,
   defaultConfigurations,
   TYPE_DETECTED,
   TYPE_SWITCHED_OBSERVATION,
@@ -17,7 +19,9 @@ prepareForInjection()
 initializeRecorder()
 
 function installDefaultConfigurations() {
-  chrome.storage.local.set({ configurations: defaultConfigurations })
+  chrome.storage.local.set({
+    [chromeStorageKeyForConfigurations]: defaultConfigurations
+  })
 }
 
 function prepareForInjection() {
@@ -31,8 +35,12 @@ function prepareForInjection() {
 
         if (message.observationEnabled) {
           chrome.storage.local.get(
-            "configurations",
-            ({ configurations }: { configurations: Configurations }) => {
+            chromeStorageKeyForConfigurations,
+            ({
+              [chromeStorageKeyForConfigurations]: configurations
+            }: {
+              [chromeStorageKeyForConfigurations]: Configurations
+            }) => {
               execute = createExecuteCallback(configurations)
               console.log("observation is ready, now waiting for reload...")
               chrome.webNavigation.onDOMContentLoaded.addListener(execute)
@@ -70,13 +78,15 @@ function createExecuteCallback(configs: Configurations) {
 function initializeRecorder() {
   chrome.runtime.onMessage.addListener(async (message: DetectedMessageData) => {
     if (message.type === TYPE_DETECTED) {
-      chrome.storage.local.get("detected", (result) => {
-        const current = result["detected"]
+      chrome.storage.local.get(chromeStorageKeyForDetections, (result) => {
+        const current = result[chromeStorageKeyForDetections]
         if (current?.push) {
           current.push(message)
-          chrome.storage.local.set({ detected: current })
+          chrome.storage.local.set({ [chromeStorageKeyForDetections]: current })
         } else {
-          chrome.storage.local.set({ detected: [message] })
+          chrome.storage.local.set({
+            [chromeStorageKeyForDetections]: [message]
+          })
         }
       })
     }

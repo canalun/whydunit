@@ -1,6 +1,9 @@
 import { useState } from "react"
 
-import { defaultConfigurations } from "~common"
+import {
+  chromeStorageKeyForConfigurations,
+  defaultConfigurations
+} from "~common"
 
 function ConfigurationPage() {
   const [configurations, setConfigurations] = useState<string>(
@@ -26,10 +29,13 @@ function ConfigurationPage() {
       <button
         disabled={isSaved}
         onClick={() => {
-          chrome.storage.local.set({ configurations }, () => {
-            setIsSaved(true)
-            setIsWarningDisplayed(true)
-          })
+          chrome.storage.local.set(
+            { [chromeStorageKeyForConfigurations]: configurations },
+            () => {
+              setIsSaved(true)
+              setIsWarningDisplayed(true)
+            }
+          )
         }}>
         save
       </button>
