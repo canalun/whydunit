@@ -19,8 +19,6 @@ export type ObservationSwitchedMessageData = {
   observationEnabled: boolean
 }
 
-export const EXT_ID = "fdbpfhlakkfkmajmbkhjiacchkcjhhig"
-
 export type Configurations = {
   url: string
   targets: Target[]
