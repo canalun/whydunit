@@ -8,18 +8,12 @@ import {
 function ResultPage() {
   const [data, setData] = useState<DetectedMessageData[]>([])
   useEffect(() => {
-    chrome.storage.onChanged.addListener(
-      ({
-        [chromeStorageKeyForDetections]: { newValue }
-      }: {
-        [chromeStorageKeyForDetections]: {
-          newValue: DetectedMessageData[]
-          oldValue: DetectedMessageData[]
-        }
-      }) => {
-        setData(newValue)
+    chrome.storage.onChanged.addListener((changes) => {
+      const detections = changes[chromeStorageKeyForDetections]?.newValue
+      if (detections) {
+        setData(detections)
       }
-    )
+    })
   }, [setData])
   return (
     <>

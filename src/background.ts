@@ -25,7 +25,11 @@ function installDefaultConfigurations() {
 }
 
 function prepareForInjection() {
-  let execute = null
+  let execute:
+    | ((
+        details: chrome.webNavigation.WebNavigationFramedCallbackDetails
+      ) => void)
+    | null = null
   chrome.runtime.onMessage.addListener(
     (message: ObservationSwitchedMessageData) => {
       if (message.type === TYPE_SWITCHED_OBSERVATION) {
@@ -36,11 +40,7 @@ function prepareForInjection() {
         if (message.observationEnabled) {
           chrome.storage.local.get(
             chromeStorageKeyForConfigurations,
-            ({
-              [chromeStorageKeyForConfigurations]: configurations
-            }: {
-              [chromeStorageKeyForConfigurations]: Configurations
-            }) => {
+            ({ [chromeStorageKeyForConfigurations]: configurations }) => {
               execute = createExecuteCallback(configurations)
               console.log("observation is ready, now waiting for reload...")
               chrome.webNavigation.onDOMContentLoaded.addListener(execute)

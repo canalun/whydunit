@@ -15,7 +15,7 @@ export function observeApis(targets: Target[]) {
   const originalLocationHref = Object.getOwnPropertyDescriptor(
     window.location,
     "href"
-  ).get.bind(window.location)
+  )!.get!.bind(window.location)
 
   /////////////////////////////////////////////////////////////
 
@@ -39,7 +39,7 @@ export function observeApis(targets: Target[]) {
       return
     }
 
-    const propKey = name.split(".").at(-1)
+    const propKey = name.split(".").at(-1)!
     const originalPrototype = getOriginalPrototype(boundThis, propKey)
     // Use `=== null`, because `originalPrototype` is strangely falsy in some cases such as `document.all`.
     if (!originalPrototype) {
@@ -62,11 +62,14 @@ export function observeApis(targets: Target[]) {
     let boundThis = globalThis
     let error: Error | null = null
     for (let i = 0; i < path.length - 1; i++) {
+      // try is necessary, because some APIs such as `callee` throw when it's accessed.
       try {
-        // Some APIs such as `callee` throw when it's accessed.
+        // @ts-expect-error
         boundThis = boundThis[path[i]]
       } catch (e) {
+        // @ts-expect-error
         boundThis = null
+        // @ts-expect-error
         error = e
         break
       }
@@ -94,6 +97,13 @@ export function observeApis(targets: Target[]) {
 
   function override(originalPrototype: object, propKey: string, handler: any) {
     const desc = Object.getOwnPropertyDescriptor(originalPrototype, propKey)
+    if (desc === void 0) {
+      console.error(
+        `${name} cannot be observed, because the identified prototype has no ${propKey}.`
+      )
+      return
+    }
+
     // Property descriptors are of two kinds.
     // https://262.ecma-international.org/15.0/index.html?_gl=1*1n9j7ka*_ga*ODUwMDQyMzQ2LjE3MjIwOTkzOTg.*_ga_TDCK4DWEPP*MTcyMjA5OTM5OC4xLjAuMTcyMjA5OTM5OC4wLjAuMA..#table-object-property-attributes
     if ("value" in desc) {
@@ -115,15 +125,17 @@ export function observeApis(targets: Target[]) {
         desc
       )
     }
+    return
   }
 
   function createProxyHandler(target: Target, isBoundThisLogEnabled: boolean) {
     const { apiName: name, debugInfo } = target
     return {
+      // @ts-expect-error
       apply(target, thisArg, argumentsList) {
         originalLog("Arguments:", Array.from(argumentsList))
 
-        const stack = originalError().stack
+        const stack = originalError().stack!
         originalLog("Stack:", stack)
 
         isBoundThisLogEnabled && originalLog("BoundThis:", thisArg)
@@ -162,8 +174,7 @@ export function observeApis(targets: Target[]) {
       let arg = ""
       try {
         // TODO: is this right?
-        arg =
-          _arg instanceof Object ? originalJSONStringify(_arg) : _arg.toString()
+        arg = _arg instanceof Object ? originalJSONStringify(_arg) : `${_arg}`
       } catch {
         arg = "*** CANNOT BE STRINGIFIED ***"
       }
