@@ -1,14 +1,31 @@
-import { useState } from "react"
+import { useLayoutEffect, useState } from "react"
 
-import {
-  chromeStorageKeyForConfigurations,
-  defaultConfigurations
-} from "~common"
+import { chromeStorageKeyForConfigurations } from "~common"
 
 function ConfigurationPage() {
-  const [configurations, setConfigurations] = useState<string>(
-    JSON.stringify(defaultConfigurations, null, 2)
-  )
+  const [configurations, setConfigurations] = useState<string>("")
+
+  useLayoutEffect(() => {
+    chrome.storage.local.get(
+      chromeStorageKeyForConfigurations,
+      ({ configurations }) => {
+        setConfigurations(JSON.stringify(configurations, null, 2))
+      }
+    )
+
+    const listener = (changes: {
+      [key: string]: chrome.storage.StorageChange
+    }) => {
+      const newConfigurations =
+        changes[chromeStorageKeyForConfigurations]?.newValue
+      if (newConfigurations) {
+        setConfigurations(JSON.stringify(newConfigurations, null, 2))
+      }
+    }
+    chrome.storage.onChanged.addListener(listener)
+    return () => chrome.storage.onChanged.removeListener(listener)
+  }, [])
+
   const [isSaved, setIsSaved] = useState<boolean>(true)
   const [isWarningDisplayed, setIsWarningDisplayed] = useState<boolean>(false)
 
@@ -30,7 +47,7 @@ function ConfigurationPage() {
         disabled={isSaved}
         onClick={() => {
           chrome.storage.local.set(
-            { [chromeStorageKeyForConfigurations]: configurations },
+            { [chromeStorageKeyForConfigurations]: JSON.parse(configurations) },
             () => {
               setIsSaved(true)
               setIsWarningDisplayed(true)

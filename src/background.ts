@@ -4,10 +4,8 @@ import {
   chromeStorageKeyForDetections,
   defaultConfigurations,
   TYPE_DETECTED,
-  TYPE_SWITCHED_OBSERVATION,
   type Configurations,
   type DetectedMessageData,
-  type ObservationSwitchedMessageData,
   type Target
 } from "~common"
 import { observeApis } from "~override"
@@ -30,26 +28,24 @@ function prepareForInjection() {
         details: chrome.webNavigation.WebNavigationFramedCallbackDetails
       ) => void)
     | null = null
-  chrome.runtime.onMessage.addListener(
-    (message: ObservationSwitchedMessageData) => {
-      if (message.type === TYPE_SWITCHED_OBSERVATION) {
-        if (execute) {
-          chrome.webNavigation.onDOMContentLoaded.removeListener(execute)
-        }
 
-        if (message.observationEnabled) {
-          chrome.storage.local.get(
-            chromeStorageKeyForConfigurations,
-            ({ [chromeStorageKeyForConfigurations]: configurations }) => {
-              execute = createExecuteCallback(configurations)
-              console.log("observation is ready, now waiting for reload...")
-              chrome.webNavigation.onDOMContentLoaded.addListener(execute)
-            }
-          )
-        }
+  chrome.storage.onChanged.addListener((changes) => {
+    if ("isObservationEnabled" in changes) {
+      if (execute) {
+        chrome.webNavigation.onDOMContentLoaded.removeListener(execute)
+      }
+      if (!!changes.isObservationEnabled.newValue) {
+        chrome.storage.local.get(
+          chromeStorageKeyForConfigurations,
+          ({ [chromeStorageKeyForConfigurations]: configurations }) => {
+            execute = createExecuteCallback(configurations)
+            console.log("observation is ready, now waiting for reload...")
+            chrome.webNavigation.onDOMContentLoaded.addListener(execute)
+          }
+        )
       }
     }
-  )
+  })
 }
 
 function createExecuteCallback(configs: Configurations) {

@@ -1,13 +1,22 @@
-import { useState } from "react"
-
-import {
-  MESSAGE_ID,
-  TYPE_SWITCHED_OBSERVATION,
-  type ObservationSwitchedMessageData
-} from "~common"
+import { useLayoutEffect, useState } from "react"
 
 function IndexPopup() {
-  const [observationEnabled, setObservationEnabled] = useState<boolean>(false)
+  const [isObservationEnabled, setIsObservationEnabled] =
+    useState<boolean>(false)
+  useLayoutEffect(() => {
+    chrome.storage.local.get(
+      "isObservationEnabled",
+      ({ isObservationEnabled }) =>
+        setIsObservationEnabled(!!isObservationEnabled)
+    )
+    const listener = (changes: {
+      [key: string]: chrome.storage.StorageChange
+    }) => {
+      setIsObservationEnabled(!!changes.isObservationEnabled.newValue)
+    }
+    chrome.storage.onChanged.addListener(listener)
+    return () => chrome.storage.onChanged.removeListener(listener)
+  }, [])
 
   return (
     <div
@@ -17,19 +26,21 @@ function IndexPopup() {
       <p>WARNING: Please reload the page when you start observation.</p>
       <button
         onClick={() => {
-          chrome.runtime.sendMessage({
-            type: TYPE_SWITCHED_OBSERVATION,
-            id: MESSAGE_ID,
-            observationEnabled: !observationEnabled
-          } satisfies ObservationSwitchedMessageData)
-          setObservationEnabled((v) => !v)
+          chrome.storage.local.get(
+            "isObservationEnabled",
+            ({ isObservationEnabled }) => {
+              chrome.storage.local.set({
+                isObservationEnabled: !isObservationEnabled
+              })
+            }
+          )
         }}
         style={{
-          backgroundColor: observationEnabled ? "blue" : "white",
-          color: observationEnabled ? "white" : "blue",
-          fontWeight: observationEnabled ? "bold" : "initial"
+          backgroundColor: isObservationEnabled ? "blue" : "white",
+          color: isObservationEnabled ? "white" : "blue",
+          fontWeight: isObservationEnabled ? "bold" : "initial"
         }}>
-        {observationEnabled
+        {isObservationEnabled
           ? "observation is now ON"
           : "observation is now OFF"}
       </button>
