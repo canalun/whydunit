@@ -27,3 +27,19 @@ export type Configurations = {
 }[]
 
 export const ALL_URL = "<all_url>"
+
+export const defaultConfigurations: Configurations = [
+  {
+    url: ALL_URL,
+    targets: [
+      "Element.prototype.children",
+      "console.log",
+      "fetch",
+      "document.all.length"
+    ]
+  },
+  {
+    url: "https://en.wikipedia.org",
+    targets: ["String.prototype.split"]
+  }
+]

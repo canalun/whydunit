@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-import { ALL_URL, type Configurations } from "~common"
+import { defaultConfigurations } from "~common"
 
 function ConfigurationPage() {
   const [configurations, setConfigurations] = useState<string>(
@@ -39,19 +39,3 @@ function ConfigurationPage() {
 }
 
 export default ConfigurationPage
-
-const defaultConfigurations: Configurations = [
-  {
-    url: ALL_URL,
-    targets: [
-      "Element.prototype.children",
-      "console.log",
-      "fetch",
-      "document.all.length"
-    ]
-  },
-  {
-    url: "https://en.wikipedia.org",
-    targets: ["String.prototype.split"]
-  }
-]

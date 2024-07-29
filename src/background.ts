@@ -1,5 +1,6 @@
 import {
   ALL_URL,
+  defaultConfigurations,
   TYPE_DETECTED,
   TYPE_SWITCHED_OBSERVATION,
   type Configurations,
@@ -10,8 +11,13 @@ import { observeApis } from "~override"
 
 export {}
 
+installDefaultConfigurations()
 prepareForInjection()
 initializeRecorder()
+
+function installDefaultConfigurations() {
+  chrome.storage.local.set({ configurations: defaultConfigurations })
+}
 
 function prepareForInjection() {
   let execute = null
@@ -23,14 +29,11 @@ function prepareForInjection() {
         }
 
         if (message.observationEnabled) {
-          chrome.storage.local.get(
-            "configurations",
-            ({ configurations: _configuration }) => {
-              const configurations = JSON.parse(_configuration)
-              execute = createExecuteCallback(configurations)
-              chrome.webNavigation.onDOMContentLoaded.addListener(execute)
-            }
-          )
+          chrome.storage.local.get("configurations", ({ configurations }) => {
+            execute = createExecuteCallback(configurations)
+            console.log("observation is ready, now waiting for reload...")
+            chrome.webNavigation.onDOMContentLoaded.addListener(execute)
+          })
         }
       }
     }
