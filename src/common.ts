@@ -4,9 +4,9 @@ export const TYPE_SWITCHED_OBSERVATION = "switched"
 export const TYPE_DETECTED = "detected"
 
 export type DetectedMessageData = {
-  url: string
   id: typeof MESSAGE_ID
   type: typeof TYPE_DETECTED
+  url: string
   name: string
   stack: string
   args: string[]
