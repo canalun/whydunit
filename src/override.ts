@@ -139,8 +139,8 @@ export function observeApis(targets: Target[]) {
           if (
             ("args" in debugInfo &&
               stringifiedEqual(debugInfo.args, argumentsList)) ||
-            ("bindThis" in debugInfo &&
-              stringifiedEqual(debugInfo.bindThis, thisArg))
+            ("boundThis" in debugInfo &&
+              stringifiedEqual(debugInfo.boundThis, thisArg))
           ) {
             debugger
           }

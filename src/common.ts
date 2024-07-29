@@ -45,7 +45,14 @@ export const defaultConfigurations: Configurations = [
   },
   {
     url: "https://en.wikipedia.org",
-    targets: [{ apiName: "String.prototype.split" }]
+    targets: [
+      {
+        apiName: "String.prototype.split",
+        debugInfo: {
+          boundThis: "test"
+        }
+      }
+    ]
   }
 ]
 
@@ -56,10 +63,10 @@ export type Target = {
 type DebugInfo =
   | {
       args: string[]
-      bindThis: unknown
+      boundThis: unknown
     }
   | {
-      bindThis: unknown
+      boundThis: unknown
     }
   | {
       args: string[]
