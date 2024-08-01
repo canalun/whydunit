@@ -11,6 +11,7 @@ export type DetectedMessageData = {
   stack: string
   args: string[]
   boundThis?: string
+  firedEventType: string | null
 }
 
 export type ObservationSwitchedMessageData = {

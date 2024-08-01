@@ -59,6 +59,7 @@ function createExecuteCallback(configs: Configurations) {
       }
     }
 
+    // TODO: Use a combination of a function adding args to globalThis and a file reading the args.
     chrome.scripting.executeScript({
       target: {
         frameIds: [details.frameId],

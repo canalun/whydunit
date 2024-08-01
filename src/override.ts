@@ -19,6 +19,30 @@ export function observeApis(targets: Target[]) {
 
   /////////////////////////////////////////////////////////////
 
+  let firedEventType: string | null = null
+  EventTarget.prototype.addEventListener = new Proxy(
+    EventTarget.prototype.addEventListener,
+    {
+      // TODO: Is it possible to track eventType across Promises?
+      // ref: Zone.js
+      apply(target, thisArg, argumentsList) {
+        const listener = argumentsList[1]
+        const callback = (event: Parameters<EventListener>[0]) => {
+          firedEventType = argumentsList[0]
+          "handleEvent" in listener
+            ? listener.handleEvent(event)
+            : listener(event)
+          firedEventType = null
+        }
+
+        argumentsList[1] = callback
+        return originalApply(target, thisArg, argumentsList)
+      }
+    }
+  )
+
+  /////////////////////////////////////////////////////////////
+
   observeAllApis()
 
   function observeAllApis() {
@@ -195,7 +219,8 @@ export function observeApis(targets: Target[]) {
       name,
       stack,
       args,
-      boundThis
+      boundThis,
+      firedEventType
     } satisfies DetectedMessageData)
   }
 
