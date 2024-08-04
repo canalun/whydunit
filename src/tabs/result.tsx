@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, type CSSProperties } from "react"
 
 import {
   chromeStorageKeyForDetections,
@@ -41,12 +41,16 @@ function ResultPage() {
             ({ url, name, stack, args, boundThis, firedEventType }, i) => {
               return (
                 <tr key={i}>
-                  <td key={i}>{url}</td>
+                  <td style={tableCellStyle(300)} key={i}>
+                    {url}
+                  </td>
                   <td key={i}>{name}</td>
                   <td key={i}>{firedEventType || ""}</td>
-                  <td style={tableCellStyle(500)}>{args}</td>
-                  <td>{boundThis ?? ""}</td>
-                  <td style={tableCellStyle(500)}>
+                  <td style={tableCellStyle(300)} key={i}>
+                    {args}
+                  </td>
+                  <td key={i}>{boundThis ?? ""}</td>
+                  <td style={tableCellStyle(300)} key={i}>
                     {...stack
                       .split("\n")
                       .slice(2)
@@ -69,11 +73,14 @@ function ResultPage() {
   )
 }
 
-const tableCellStyle = (maxWidth: number) => ({
+const tableCellStyle: (maxWidth: number) => CSSProperties = (
+  maxWidth: number
+) => ({
   whiteSpace: "nowrap",
   maxWidth: maxWidth,
   overflow: "hidden",
-  textOverflow: "ellipsis"
+  textOverflow: "ellipsis",
+  wordWrap: "break-word"
 })
 
 export default ResultPage
