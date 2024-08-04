@@ -43,10 +43,10 @@ export const defaultConfigurations: Configurations = [
     ]
   },
   {
-    url: "https://en.wikipedia.org",
+    url: "https://ja.wikipedia.org",
     targets: [
       {
-        apiName: "String.prototype.split",
+        apiName: "String.prototype.replace",
         debugInfo: {
           boundThis: "test"
         }
