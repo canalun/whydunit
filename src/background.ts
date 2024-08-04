@@ -12,15 +12,16 @@ import { observeApis } from "~override"
 
 export {}
 
-installDefaultConfigurations()
-prepareForInjection()
-initializeRecorder()
+chrome.runtime.onInstalled.addListener(installDefaultConfigurations)
 
 function installDefaultConfigurations() {
   chrome.storage.local.set({
     [chromeStorageKeyForConfigurations]: defaultConfigurations
   })
 }
+
+prepareForInjection()
+initializeRecorder()
 
 function prepareForInjection() {
   let execute:
