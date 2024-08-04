@@ -1,3 +1,9 @@
+
+
+
+https://github.com/user-attachments/assets/f3f77efe-7bb2-45c5-bba2-760cd370e392
+
+
 This is a [Plasmo extension](https://docs.plasmo.com/) project bootstrapped with [`plasmo init`](https://www.npmjs.com/package/plasmo).
 
 ## Getting Started
