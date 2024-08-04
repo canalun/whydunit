@@ -51,6 +51,7 @@ function IndexPopup() {
         href={`chrome-extension://${chrome.runtime.id}/tabs/result.html`}>
         open result page
       </a>
+      <br />
       <a
         target="_blank"
         rel="noreferrer"
